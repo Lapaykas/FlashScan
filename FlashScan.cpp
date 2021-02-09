@@ -4,7 +4,7 @@
 #include "framework.h"
 #include "FlashScan.h"
 #include "Dbt.h"
-
+#include "DataBase.h"
 #define MAX_LOADSTRING 100
 
 // Global Variables:
@@ -17,7 +17,8 @@ GUID guidForUSBDevices = { 0x53f56307, 0xb6bf, 0x11d0, { 0x94, 0xf2, 0x00, 0xa0,
 
 struct
 {
-    HANDLE REG_DEVICE;
+    DataBase* BASE;
+    HDEVNOTIFY REG_DEVICE;
 }Params;
 
 // Forward declarations of functions included in this code module:
@@ -33,8 +34,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
-    
-    // TODO: Place code here.
 
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
@@ -48,7 +47,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     }
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_FLASHSCAN));
-    //MessageBox(NULL, (LPCWSTR)L"Count", (LPCWSTR)L"Number", MB_YESNO);
+   
+    DataBase BASE;
+    Params.BASE = &BASE;
     // Main message loop:
     MSG msg;    
     while (GetMessage(&msg, nullptr, 0, 0))
@@ -60,25 +61,25 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         }
     }
     if(Params.REG_DEVICE!=NULL)
-        CloseHandle(Params.REG_DEVICE);
+        
     return (int) msg.wParam;
 }
 
 
-
-HDEVNOTIFY RegProc(HWND hWnd)
+//‘ункци€ регистрации приложени€ дл€ получени€ уведомлений от системы
+HDEVNOTIFY RegProc(HWND hWnd) noexcept
 {
     DEV_BROADCAST_DEVICEINTERFACE NotificationFilter;
     ZeroMemory(&NotificationFilter, sizeof(NotificationFilter));
     NotificationFilter.dbcc_size = sizeof(DEV_BROADCAST_DEVICEINTERFACE);
     NotificationFilter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
     NotificationFilter.dbcc_classguid = guidForUSBDevices;
-    HDEVNOTIFY REG = RegisterDeviceNotification(hWnd, &NotificationFilter, DEVICE_NOTIFY_WINDOW_HANDLE); //регистраци€ приложени€ дл€ получени€                                                                                                       
-                                                                                                         //уведомлений от системы
+    HDEVNOTIFY REG = RegisterDeviceNotification(hWnd, &NotificationFilter, DEVICE_NOTIFY_WINDOW_HANDLE); 
     return REG;
 }
 
-wchar_t* GetUSBInfo(WPARAM wParam, LPARAM lParam)
+//‘ункци€ получени€ полного имени USB-накопител€
+wchar_t* GetUSBInfo(WPARAM wParam, LPARAM lParam) noexcept
 {
     int wmId = LOWORD(wParam);
     switch (wmId)
@@ -92,6 +93,7 @@ wchar_t* GetUSBInfo(WPARAM wParam, LPARAM lParam)
             return USBInfo->dbcc_name;
         }
     }
+    return nullptr;
 }
 
 ATOM MyRegisterClass(HINSTANCE hInstance)
@@ -159,15 +161,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case WM_CREATE:   
         {
-        Params.REG_DEVICE = (HANDLE)RegProc(hWnd);
+        Params.REG_DEVICE = RegProc(hWnd);
         break;
         }
     case WM_DEVICECHANGE:
-        {
-        wchar_t* a = GetUSBInfo(wParam, lParam);
+    {        
+        Params.BASE->AddDataToDataBase(GetUSBInfo(wParam, lParam));
         break;
         }
     case WM_DESTROY:
+        UnregisterDeviceNotification(Params.REG_DEVICE);
         PostQuitMessage(0);
         break;
     default:
