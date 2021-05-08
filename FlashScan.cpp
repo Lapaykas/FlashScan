@@ -5,26 +5,32 @@
 #include "FlashScan.h"
 #include "Dbt.h"
 #include "DataBase.h"
-#define MAX_LOADSTRING 100
+#include "USBInfo.h"
+#include <windows.h>
+#include <utility>
+#include <string>
+#include "WindowForButtons.h" 
+#include "WindowForLogs.h" 
+#include "Common.h"
 
+
+#define MAX_LOADSTRING 100
+#define ID_BUTTON 3000
 // Global Variables:
-HINSTANCE hInst;                                // current instance
+                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 
 // Giud for usb devices
-GUID guidForUSBDevices = { 0x53f56307, 0xb6bf, 0x11d0, { 0x94, 0xf2, 0x00, 0xa0, 0xc9, 0x1e, 0xfb, 0x8b } };
 
-struct
-{
-    DataBase* BASE;
-    HDEVNOTIFY REG_DEVICE;
-}Params;
+
+
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
-BOOL                InitInstance(HINSTANCE, int);
+BOOL                InitInstance(HINSTANCE, int, HWND&);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
+
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
@@ -41,15 +47,16 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     MyRegisterClass(hInstance);
 
     // Perform application initialization:
-    if (!InitInstance (hInstance, nCmdShow))
+    HWND MAINWINDOWHANDLE;
+    if (!InitInstance (hInstance, nCmdShow, MAINWINDOWHANDLE))
     {
         return FALSE;
     }
+    
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_FLASHSCAN));
    
-    DataBase BASE;
-    Params.BASE = &BASE;
+    
     // Main message loop:
     MSG msg;    
     while (GetMessage(&msg, nullptr, 0, 0))
@@ -60,7 +67,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
             DispatchMessage(&msg);
         }
     }
-    if(Params.REG_DEVICE!=NULL)
         
     return (int) msg.wParam;
 }
@@ -110,7 +116,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_FLASHSCAN));
     wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_FLASHSCAN);
+    wcex.lpszMenuName   = NULL;//MAKEINTRESOURCEW(IDC_FLASHSCAN);
     wcex.lpszClassName  = szWindowClass;
     wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
@@ -118,12 +124,12 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 }
 
 
-BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
+BOOL InitInstance(HINSTANCE hInstance, int nCmdShow, HWND& hWnd)
 {
-   hInst = hInstance; // Store instance handle in our global variable
+    // Store instance handle in our global variable
 
-   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+   hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME,
+      500,300 , 405,500, nullptr, nullptr, hInstance, hInstance);
 
    if (!hWnd)
    {
@@ -141,6 +147,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+	static HWND hWindowLogs;
+    GLOBALSTRUCT* params = (GLOBALSTRUCT*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
     switch (message)
     {
     case WM_COMMAND:
@@ -148,8 +156,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             int wmId = LOWORD(wParam);
             switch (wmId)
             {
-            case IDM_ABOUT:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+            case IDM_ABOUT:                
+                DialogBox(params->hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
                 break;
             case IDM_EXIT:
                 DestroyWindow(hWnd);
@@ -161,23 +169,50 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case WM_CREATE:   
         {
-        Params.REG_DEVICE = RegProc(hWnd);
+        GLOBALSTRUCT* params2 = new GLOBALSTRUCT;
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)params2);
+
+        CDataBaseWrapper *BASE = new CDataBaseWrapper;
+
+        
+        params2->BASE = BASE;
+
+        CREATESTRUCT* pCreateParams = reinterpret_cast<CREATESTRUCT*>(lParam);
+        params2->hInst = reinterpret_cast<HINSTANCE>(pCreateParams->lpCreateParams);
+
+        params2->REG_DEVICE = RegProc(hWnd);
+        ATOM a = AddWindowForButtons(L"WindowButtons", L"Buttons", hWnd, WndProcForWindowOfButtons);  
+		hWindowLogs = AddWindowForLogs(L"Listbox", L"WindowOfLogs", hWnd, WndProcForWindowOfLogs);
+		
         break;
         }
     case WM_DEVICECHANGE:
-    {        
-        Params.BASE->AddDataToDataBase(GetUSBInfo(wParam, lParam));
-        break;
+    {               
+        wchar_t* pConnectedDevice = GetUSBInfo(wParam, lParam);
+        if (pConnectedDevice == nullptr)
+            break;
+        else {
+            CUsbInfoRetrieved USBINFO(pConnectedDevice);
+			SendMessage(hWindowLogs, WM_USER_ADD_STRING_TO_LISTBOX, 0, (LPARAM)(LPWSTR)USBINFO.GetDeviceName());
+			//SendMessage(hWindowLogs, LB_ADDSTRING, 0, (LPARAM)(LPWSTR)USBINFO.GetSerialNumber());
+           params->BASE->AddDataToDataBase(USBINFO.GetDeviceName(), USBINFO.GetSerialNumber());
+			
+            break;
+        }
         }
     case WM_DESTROY:
-        UnregisterDeviceNotification(Params.REG_DEVICE);
+        UnregisterDeviceNotification(params->REG_DEVICE);
+        delete params->BASE;
+        delete params;
         PostQuitMessage(0);
         break;
     default:
+        
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
     return 0;
 }
+
 
 // Message handler for about box.
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
