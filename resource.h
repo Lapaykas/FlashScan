@@ -20,9 +20,8 @@
 #define IDR_MAINFRAME                   128
 #define IDC_STATIC                      -1
 #define IDB_GET_REGISTER_USB			129
-#define IDB_GET_SETUPAPI_USB			130
-#define IDW_LOG_WINDOW					131
-#define IDW_LOG_REGISTER				132
+#define IDW_LOG_WINDOW					130
+#define IDW_LOG_REGISTER				131
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED

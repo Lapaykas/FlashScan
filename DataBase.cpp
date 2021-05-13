@@ -1,12 +1,7 @@
 #include "DataBase.h"
 #include <iostream>
+#include "Common.h"
 
-#define ERRORINFO(errorMessage) \
-do{ \
-char error[256]; \
-sprintf_s(error, 256,"%s %s %d %s", __FILE__ ,__FUNCTION__, __LINE__, errorMessage); \
-throw std::exception(error);}\
-while(0);
 
 
 #define __SELECTID__ L"SELECT id FROM USBDeviceBase WHERE SerialNum = ?;\0"

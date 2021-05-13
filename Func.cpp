@@ -84,7 +84,6 @@ DWORD GetCSubKeys(HKEY hKey)
 	FILETIME ftLastWriteTime;      // last write time 
 
 
-	TCHAR  achValue[MAX_VALUE_NAME];
 	DWORD cchValue = MAX_VALUE_NAME;
 
 	// Get the class name and the value count. 

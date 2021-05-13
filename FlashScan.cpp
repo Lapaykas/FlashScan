@@ -9,8 +9,9 @@
 #include <windows.h>
 #include <utility>
 #include <string>
-#include "WindowForButtons.h" 
-#include "WindowForLogs.h" 
+#include "./Windows/WindowForButtons.h" 
+#include "./Windows/WindowForLogs.h" 
+#include "./Windows/WindowForRegister.h"
 #include "Common.h"
 
 
@@ -22,12 +23,42 @@ WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 
 // Giud for usb devices
-
-
+ATOM                MyRegisterClass(HINSTANCE hInstance);
+bool RegWindowsClasses(HINSTANCE hInstance)
+{
+	std::wstring errorMessage(L"Cannot create ");
+	bool result = true;
+	if (MyRegisterClass(hInstance) == NULL)
+	{
+		result &= false;
+		errorMessage += L"Mainwindow class";
+	}
+	if (RegWindowForButtons(hInstance) == NULL)
+	{
+		result &= false;
+		errorMessage += L" WindowForButtons class";
+	}
+	if (RegWindowForLogs(hInstance) == NULL)
+	{
+		result &= false;
+		errorMessage += L" WindowForLogs class";
+	}
+	if (RegWindowForRegisters(hInstance) == NULL)
+	{
+		result &= false;
+		errorMessage += L" WindowForRegister class";
+	}
+	if (!result)
+	{
+		MessageBox(NULL, errorMessage.c_str(), L"FailRegistry", MB_OK);
+	}
+	return result;
+	
+}
 
 
 // Forward declarations of functions included in this code module:
-ATOM                MyRegisterClass(HINSTANCE hInstance);
+
 BOOL                InitInstance(HINSTANCE, int, HWND&);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -44,8 +75,11 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_FLASHSCAN, szWindowClass, MAX_LOADSTRING);
-    MyRegisterClass(hInstance);
-
+	// Регистрация классов окон
+	if (!RegWindowsClasses(hInstance)) 
+	{
+		return FALSE;
+	}
     // Perform application initialization:
     HWND MAINWINDOWHANDLE;
     if (!InitInstance (hInstance, nCmdShow, MAINWINDOWHANDLE))
@@ -100,6 +134,7 @@ wchar_t* GetUSBInfo(WPARAM wParam, LPARAM lParam) noexcept
     }
     return nullptr;
 }
+//Функция регистрации класса главного окна
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
     WNDCLASSEXW wcex;
@@ -120,6 +155,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 
     return RegisterClassExW(&wcex);
 }
+//Функция создания главного окна
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow, HWND& hWnd)
 {
     // Store instance handle in our global variable
@@ -137,18 +173,17 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow, HWND& hWnd)
 
    return TRUE;
 }
-
+//Функция получения строки из имени и серийного номера устройства
 std::wstring GetConcateStringToAddToLogs(const wchar_t* arg1, const wchar_t* arg2)
 {
     std::wstring wstrResult;
     return wstrResult =L"Device Name: " + std::wstring(arg1) + L" Serial Number: " + std::wstring(arg2);
 }
 
-
+//CALLBACK функция обработки сообщений
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {    
-    GLOBALSTRUCT* params = (GLOBALSTRUCT*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-    static HWND hWndWindowOFLogs;
+    MAINWINDOWSTRUCT* pMainWindowStruct = (MAINWINDOWSTRUCT*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
     switch (message)
     {
     case WM_COMMAND:
@@ -157,7 +192,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             switch (wmId)
             {
             case IDM_ABOUT:                
-                DialogBox(params->hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+                DialogBox(pMainWindowStruct->hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
                 break;
             case IDM_EXIT:
                 DestroyWindow(hWnd);
@@ -169,20 +204,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case WM_CREATE:   
         {
-        GLOBALSTRUCT* params2 = new GLOBALSTRUCT;
-        SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)params2);
+		;
+            MAINWINDOWSTRUCT* pMainWindowStructCreate = new MAINWINDOWSTRUCT;
+		
+        SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pMainWindowStructCreate);
 
         CDataBaseWrapper *BASE = new CDataBaseWrapper;
 
         
-        params2->BASE = BASE;
+        pMainWindowStructCreate->BASE = BASE;
 
         CREATESTRUCT* pCreateParams = reinterpret_cast<CREATESTRUCT*>(lParam);
-        params2->hInst = reinterpret_cast<HINSTANCE>(pCreateParams->lpCreateParams);
+        pMainWindowStructCreate->hInst = reinterpret_cast<HINSTANCE>(pCreateParams->lpCreateParams);
 
-        params2->REG_DEVICE = RegProc(hWnd);
-        ATOM a = AddWindowForButtons(L"WindowButtons", L"Buttons", hWnd, WndProcForWindowOfButtons);  
-        hWndWindowOFLogs = AddWindowForLogs(L"WindowsOfLogs", L"Logs", hWnd, WndProcForWindowOfLogs);
+        pMainWindowStructCreate->REG_DEVICE = RegProc(hWnd);
+        HWND hWindowForButtons = CreateWindowForButtons(pMainWindowStructCreate->hInst, hWnd);  
+		pMainWindowStructCreate->hLogWindow = CreateWindowForLogs(pMainWindowStructCreate->hInst, hWnd);;
  
         break;
         }
@@ -193,18 +230,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         else {
             CUsbInfoRetrieved USBINFO(pConnectedDevice);
-			SendMessage(hWndWindowOFLogs, WM_USER_ADD_STRING_TO_LISTBOX, 0, 
+			SendMessage(pMainWindowStruct->hLogWindow, WM_USER_ADD_STRING_TO_LISTBOX, 0, 
                 (LPARAM)(LPWSTR)GetConcateStringToAddToLogs(USBINFO.GetDeviceName(), USBINFO.GetSerialNumber()).c_str());
-			//SendMessage(hWindowLogs, LB_ADDSTRING, 0, (LPARAM)(LPWSTR)USBINFO.GetSerialNumber());
-            params->BASE->AddDataToDataBase(USBINFO.GetDeviceName(), USBINFO.GetSerialNumber());
+            pMainWindowStruct->BASE->AddDataToDataBase(USBINFO.GetDeviceName(), USBINFO.GetSerialNumber());
 			
             break;
         }
         }
     case WM_DESTROY:
-        UnregisterDeviceNotification(params->REG_DEVICE);
-        delete params->BASE;
-        delete params;
+        UnregisterDeviceNotification(pMainWindowStruct->REG_DEVICE);
+        delete pMainWindowStruct->BASE;
+        delete pMainWindowStruct;
         PostQuitMessage(0);
         break;
     default:
