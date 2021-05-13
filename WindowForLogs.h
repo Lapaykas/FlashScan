@@ -2,7 +2,8 @@
 #include <string>
 #include "DataBase.h"
 #include "resource.h"
+#include "Func.h"
 
-HWND     AddWindowForLogs(const std::wstring&& windowClassName, const std::wstring&& windowTitle, HWND hParentHandle, const WNDPROC callback);
+HWND  AddWindowForLogs(const std::wstring&& windowClassName, const std::wstring&& windowTitle, HWND hParentHandle, const WNDPROC callback);
 LRESULT CALLBACK    WndProcForWindowOfLogs(HWND, UINT, WPARAM, LPARAM);
 

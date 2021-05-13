@@ -83,7 +83,6 @@ HDEVNOTIFY RegProc(HWND hWnd) noexcept
     HDEVNOTIFY REG = RegisterDeviceNotification(hWnd, &NotificationFilter, DEVICE_NOTIFY_WINDOW_HANDLE); 
     return REG;
 }
-
 //Функция получения полного имени USB-накопителя
 wchar_t* GetUSBInfo(WPARAM wParam, LPARAM lParam) noexcept
 {
@@ -101,7 +100,6 @@ wchar_t* GetUSBInfo(WPARAM wParam, LPARAM lParam) noexcept
     }
     return nullptr;
 }
-
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
     WNDCLASSEXW wcex;
@@ -122,8 +120,6 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 
     return RegisterClassExW(&wcex);
 }
-
-
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow, HWND& hWnd)
 {
     // Store instance handle in our global variable
@@ -142,13 +138,17 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow, HWND& hWnd)
    return TRUE;
 }
 
-
+std::wstring GetConcateStringToAddToLogs(const wchar_t* arg1, const wchar_t* arg2)
+{
+    std::wstring wstrResult;
+    return wstrResult =L"Device Name: " + std::wstring(arg1) + L" Serial Number: " + std::wstring(arg2);
+}
 
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	static HWND hWindowLogs;
+{    
     GLOBALSTRUCT* params = (GLOBALSTRUCT*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+    static HWND hWndWindowOFLogs;
     switch (message)
     {
     case WM_COMMAND:
@@ -182,8 +182,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         params2->REG_DEVICE = RegProc(hWnd);
         ATOM a = AddWindowForButtons(L"WindowButtons", L"Buttons", hWnd, WndProcForWindowOfButtons);  
-		hWindowLogs = AddWindowForLogs(L"Listbox", L"WindowOfLogs", hWnd, WndProcForWindowOfLogs);
-		
+        hWndWindowOFLogs = AddWindowForLogs(L"WindowsOfLogs", L"Logs", hWnd, WndProcForWindowOfLogs);
+ 
         break;
         }
     case WM_DEVICECHANGE:
@@ -193,9 +193,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         else {
             CUsbInfoRetrieved USBINFO(pConnectedDevice);
-			SendMessage(hWindowLogs, WM_USER_ADD_STRING_TO_LISTBOX, 0, (LPARAM)(LPWSTR)USBINFO.GetDeviceName());
+			SendMessage(hWndWindowOFLogs, WM_USER_ADD_STRING_TO_LISTBOX, 0, 
+                (LPARAM)(LPWSTR)GetConcateStringToAddToLogs(USBINFO.GetDeviceName(), USBINFO.GetSerialNumber()).c_str());
 			//SendMessage(hWindowLogs, LB_ADDSTRING, 0, (LPARAM)(LPWSTR)USBINFO.GetSerialNumber());
-           params->BASE->AddDataToDataBase(USBINFO.GetDeviceName(), USBINFO.GetSerialNumber());
+            params->BASE->AddDataToDataBase(USBINFO.GetDeviceName(), USBINFO.GetSerialNumber());
 			
             break;
         }

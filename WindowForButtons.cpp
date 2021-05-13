@@ -34,6 +34,7 @@ LRESULT CALLBACK WndProcForWindowOfButtons(HWND hWnd, UINT message, WPARAM wPara
 
     static HWND hButtonRegister;
     static HWND hButtonSetupApi;
+	static HWND hWindowForRegister;
     switch (message)
     {
     case WM_COMMAND:
@@ -42,7 +43,10 @@ LRESULT CALLBACK WndProcForWindowOfButtons(HWND hWnd, UINT message, WPARAM wPara
         {
         case IDB_GET_REGISTER_USB:
         {
-
+            if (hWindowForRegister == NULL)
+            {
+                hWindowForRegister = AddWindowForRegisters(L"Window", L"WindowForRegister", nullptr, WndProcForWindowOfRegister);
+            }
         }
         case IDB_GET_SETUPAPI_USB:
         {

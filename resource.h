@@ -4,7 +4,7 @@
 //
 
 #define WM_USER_ADD_STRING_TO_LISTBOX	(WM_USER+1)
-
+#define WM_USER_ADD_STRING_TO_LISTBOX_REGISTER (WM_USER+2)
 
 
 
@@ -22,6 +22,7 @@
 #define IDB_GET_REGISTER_USB			129
 #define IDB_GET_SETUPAPI_USB			130
 #define IDW_LOG_WINDOW					131
+#define IDW_LOG_REGISTER				132
 // Next default values for new objects
 // 
 #ifdef APSTUDIO_INVOKED
