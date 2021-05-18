@@ -15,7 +15,6 @@ UINT CalcLBItemWidth(HWND hLB, LPWSTR Text)
 	return (r.right - r.left) + (2 * GetSystemMetrics(SM_CXEDGE)) + 1;
 }
 
-
 void GetUsbInfoFromRegister(std::vector<std::wstring> &VectorOfDeviceInfo)
 {
 	HKEY hDeviceNameKey;
@@ -25,14 +24,12 @@ void GetUsbInfoFromRegister(std::vector<std::wstring> &VectorOfDeviceInfo)
 	}
 }
 
-
-
 void QueryKey(HKEY hKey, std::vector<std::wstring>* argVector)
 {
 	TCHAR    BufferDeviceName[MAX_KEY_LENGTH];   // buffer for subkey name	
 	DWORD    BufferDeviceNameSize; ;                   // size of name string 	
 	DWORD	 retCode;
-	for (auto i = 0; i < GetCSubKeys(hKey); i++)
+	for (auto i = 0ul; i < GetCSubKeys(hKey); i++)
 	{
 		BufferDeviceNameSize = MAX_KEY_LENGTH;
 		retCode = RegEnumKeyEx(hKey, i, BufferDeviceName, &BufferDeviceNameSize, NULL, NULL, NULL, NULL);
@@ -43,6 +40,7 @@ void QueryKey(HKEY hKey, std::vector<std::wstring>* argVector)
 	}
 	RegCloseKey(hKey);
 }
+
 void GetSerialNumbers(TCHAR* argBuffer, std::vector<std::wstring>* argVector)
 {
 	TCHAR    BufferSerialNumber[MAX_KEY_LENGTH];   // buffer for subkey name
@@ -54,7 +52,7 @@ void GetSerialNumbers(TCHAR* argBuffer, std::vector<std::wstring>* argVector)
 	swprintf(SubDirPath, SubDirPathSize, L"SYSTEM\\CurrentControlSet\\Enum\\USBSTOR\\%s", argBuffer);
 	HKEY hSerialNumberKey;
 	RegOpenKeyEx(HKEY_LOCAL_MACHINE, SubDirPath, 0, KEY_READ, &hSerialNumberKey);
-	for (auto j = 0; j < GetCSubKeys(hSerialNumberKey); j++)
+	for (auto j = 0ul; j < GetCSubKeys(hSerialNumberKey); j++)
 	{
 		BufferSerialNumberSize = MAX_KEY_LENGTH;
 		retCode = RegEnumKeyEx(hSerialNumberKey, j, BufferSerialNumber, &BufferSerialNumberSize, NULL, NULL, NULL, NULL);
@@ -68,7 +66,6 @@ void GetSerialNumbers(TCHAR* argBuffer, std::vector<std::wstring>* argVector)
 	}
 	RegCloseKey(hSerialNumberKey);
 }
-
 
 DWORD GetCSubKeys(HKEY hKey)
 {

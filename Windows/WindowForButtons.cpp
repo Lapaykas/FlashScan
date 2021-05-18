@@ -64,8 +64,13 @@ LRESULT CALLBACK WndProcForWindowOfButtons(HWND hWnd, UINT message, WPARAM wPara
     break;
     case WM_CREATE:
     {
-		BUTTONWINDOWSSTRUCT* pButtonWindowStructCreate = new BUTTONWINDOWSSTRUCT;
-		SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pButtonWindowStructCreate);
+		BUTTONWINDOWSSTRUCT* pButtonWindowStructCreate = AllocWindowStruct<BUTTONWINDOWSSTRUCT>(hWnd);
+		if (pButtonWindowStructCreate == nullptr)
+		{
+			MessageBox(NULL, L"Cannot create Window buttons ptr", L"Alloc Fail", MB_OK);
+			SendMessage(hWnd, WM_DESTROY, NULL, NULL);
+			break;
+		}
 		pButtonWindowStructCreate->hRegisterWindow = NULL;
 		pButtonWindowStructCreate->hButtonWindowRegister = CreateWindowW(L"button", L"READ USB FROM REGISTER", WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, 0, 0, 400,20, hWnd, (HMENU)IDB_GET_REGISTER_USB, NULL, NULL);
  

@@ -33,7 +33,7 @@ CDataBaseWrapper::CDataBaseWrapper():  m_pDataBaseHandle(nullptr)
 
 CDataBaseWrapper::~CDataBaseWrapper()
 {
-	sqlite3_close(m_pDataBaseHandle);	
+	sqlite3_close(m_pDataBaseHandle);
 }
 //__________________________________________________________
 

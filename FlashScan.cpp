@@ -13,7 +13,7 @@
 #include "./Windows/WindowForLogs.h" 
 #include "./Windows/WindowForRegister.h"
 #include "Common.h"
-
+#include "Func.h"
 
 #define MAX_LOADSTRING 100
 #define ID_BUTTON 3000
@@ -22,47 +22,72 @@
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 
-// Giud for usb devices
-ATOM                MyRegisterClass(HINSTANCE hInstance);
-bool RegWindowsClasses(HINSTANCE hInstance)
-{
-	std::wstring errorMessage(L"Cannot create ");
-	bool result = true;
-	if (MyRegisterClass(hInstance) == NULL)
-	{
-		result &= false;
-		errorMessage += L"Mainwindow class";
-	}
-	if (RegWindowForButtons(hInstance) == NULL)
-	{
-		result &= false;
-		errorMessage += L" WindowForButtons class";
-	}
-	if (RegWindowForLogs(hInstance) == NULL)
-	{
-		result &= false;
-		errorMessage += L" WindowForLogs class";
-	}
-	if (RegWindowForRegisters(hInstance) == NULL)
-	{
-		result &= false;
-		errorMessage += L" WindowForRegister class";
-	}
-	if (!result)
-	{
-		MessageBox(NULL, errorMessage.c_str(), L"FailRegistry", MB_OK);
-	}
-	return result;
-	
-}
 
 
-// Forward declarations of functions included in this code module:
 
-BOOL                InitInstance(HINSTANCE, int, HWND&);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+
+// Giud for usb devices
+ATOM MyRegisterClass(HINSTANCE hInstance)
+{
+	WNDCLASSEXW wcex;
+
+	wcex.cbSize = sizeof(WNDCLASSEX);
+
+	wcex.style = CS_HREDRAW | CS_VREDRAW;
+	wcex.lpfnWndProc = WndProc;
+	wcex.cbClsExtra = 0;
+	wcex.cbWndExtra = 0;
+	wcex.hInstance = hInstance;
+	wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_FLASHSCAN));
+	wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+	wcex.lpszMenuName = NULL;//MAKEINTRESOURCEW(IDC_FLASHSCAN);
+	wcex.lpszClassName = szWindowClass;
+	wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+	
+	return RegisterClassExW(&wcex);	
+	
+}
+
+ATOM RegWindowsClasses(HINSTANCE hInstance)
+{
+	ATOM retValue = 0;
+	retValue |= MyRegisterClass(hInstance) == NULL ? MAIN_CLASS_ERROR : 0;
+	retValue |= RegWindowForButtons(hInstance) == NULL ? BUTTON_CLASS_ERROR : 0;
+	retValue |= RegWindowForLogs(hInstance) == NULL ? LOG_CLASS_ERROR : 0;
+	retValue |= RegWindowForRegisters(hInstance) == NULL ? REGISTER_CLASS_ERROR : 0;
+		
+	return retValue;
+}
+
+std::wstring DecodeErorrRegClasses(const ATOM err)
+{
+	std::wstring retString(L"Fail Registry: ");
+	if ((err & MAIN_CLASS_ERROR) == MAIN_CLASS_ERROR)
+	{
+		retString += L"Main Window Class ";
+	}
+	if ((err & BUTTON_CLASS_ERROR) == BUTTON_CLASS_ERROR)
+	{
+		retString += L"Button Window Class ";
+	}
+	if ((err & LOG_CLASS_ERROR) == LOG_CLASS_ERROR)
+	{
+		retString += L"Log Window Class ";
+	}
+	if ((err & REGISTER_CLASS_ERROR) == REGISTER_CLASS_ERROR)
+	{
+		retString += L"Register Window Class";
+	}	
+	return retString;
+}
+
+// Forward declarations of functions included in this code module:
+ATOM                MyRegisterClass(HINSTANCE hInstance);
+BOOL                InitInstance(HINSTANCE, int, HWND&);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -75,18 +100,24 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_FLASHSCAN, szWindowClass, MAX_LOADSTRING);
+	
 	// Регистрация классов окон
-	if (!RegWindowsClasses(hInstance)) 
-	{
-		return FALSE;
+	ATOM resultRegistration = RegWindowsClasses(hInstance);
+	if (resultRegistration != 0)
+	{		
+		MessageBoxW(NULL, DecodeErorrRegClasses(resultRegistration).c_str() , L"FailRegistry", MB_OK);
+		return -1;
 	}
+
     // Perform application initialization:
     HWND MAINWINDOWHANDLE;
     if (!InitInstance (hInstance, nCmdShow, MAINWINDOWHANDLE))
     {
-        return FALSE;
+        return -2;
     }
-    
+	
+	
+
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_FLASHSCAN));
    
@@ -135,26 +166,7 @@ wchar_t* GetUSBInfo(WPARAM wParam, LPARAM lParam) noexcept
     return nullptr;
 }
 //Функция регистрации класса главного окна
-ATOM MyRegisterClass(HINSTANCE hInstance)
-{
-    WNDCLASSEXW wcex;
 
-    wcex.cbSize = sizeof(WNDCLASSEX);
-
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc    = WndProc;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_FLASHSCAN));
-    wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = NULL;//MAKEINTRESOURCEW(IDC_FLASHSCAN);
-    wcex.lpszClassName  = szWindowClass;
-    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
-
-    return RegisterClassExW(&wcex);
-}
 //Функция создания главного окна
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow, HWND& hWnd)
 {
@@ -203,16 +215,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
     case WM_CREATE:   
-        {
-		;
-            MAINWINDOWSTRUCT* pMainWindowStructCreate = new MAINWINDOWSTRUCT;
-		
-        SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pMainWindowStructCreate);
-
-        CDataBaseWrapper *BASE = new CDataBaseWrapper;
-
-        
-        pMainWindowStructCreate->BASE = BASE;
+        {		
+		MAINWINDOWSTRUCT* pMainWindowStructCreate = AllocWindowStruct<MAINWINDOWSTRUCT>(hWnd);
+		if (pMainWindowStructCreate == nullptr)
+		{
+			MessageBox(NULL, L"Cannot create Window long ptr", L"Alloc Fail", MB_OK);
+			SendMessage(hWnd, WM_DESTROY, NULL, NULL);
+			break;
+		}
+		 
+		try
+		{
+            pMainWindowStructCreate->BASE  = std::make_unique<CDataBaseWrapper>();
+		}
+		catch (const std::exception& error)
+		{
+			MessageBoxA(NULL, error.what(), "Cannot access to Database", MB_OK);
+			SendMessage(hWnd, WM_DESTROY, NULL, NULL);
+		}
+               
 
         CREATESTRUCT* pCreateParams = reinterpret_cast<CREATESTRUCT*>(lParam);
         pMainWindowStructCreate->hInst = reinterpret_cast<HINSTANCE>(pCreateParams->lpCreateParams);
@@ -239,7 +260,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
     case WM_DESTROY:
         UnregisterDeviceNotification(pMainWindowStruct->REG_DEVICE);
-        delete pMainWindowStruct->BASE;
+       // if (pMainWindowStruct->BASE != nullptr)
+       // {
+       //     delete pMainWindowStruct->BASE;
+       // }
+       
         delete pMainWindowStruct;
         PostQuitMessage(0);
         break;

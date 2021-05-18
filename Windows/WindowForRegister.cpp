@@ -52,8 +52,13 @@ LRESULT CALLBACK WndProcForWindowOfRegister(HWND hWnd, UINT message, WPARAM wPar
 	break;
 	case WM_CREATE:
 	{
-		REGISTERWINDOWSSTRUCT* pRegisterWindowStructCreate = new REGISTERWINDOWSSTRUCT;
-		SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)pRegisterWindowStructCreate);
+		REGISTERWINDOWSSTRUCT* pRegisterWindowStructCreate = AllocWindowStruct<REGISTERWINDOWSSTRUCT>(hWnd);
+		if (pRegisterWindowStructCreate == nullptr)
+		{
+			MessageBox(NULL, L"Cannot create Window buttons ptr", L"Alloc Fail", MB_OK);
+			SendMessage(hWnd, WM_DESTROY, NULL, NULL);
+			break;
+		}
 		pRegisterWindowStructCreate->hListboxWindow = CreateWindow(L"listbox", L"UsbInfoFromRegister", WS_CHILDWINDOW | WS_VISIBLE | LBS_DISABLENOSCROLL | WS_VSCROLL | WS_HSCROLL,
 			0, 0,450,150, hWnd, (HMENU)IDW_LOG_REGISTER, NULL, NULL);
 		pRegisterWindowStructCreate->sizeHScroll = 0;

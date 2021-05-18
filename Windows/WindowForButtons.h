@@ -6,6 +6,7 @@
 #include "WindowForRegister.h"
 #include "ClassName.h"
 #include "../Common.h"
+#include "../Func.h"
 
 ATOM     RegWindowForButtons(HINSTANCE hInstance);
 HWND	 CreateWindowForButtons(HINSTANCE hInstance, HWND hWndParent);
