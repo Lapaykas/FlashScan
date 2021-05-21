@@ -4,7 +4,69 @@
 //ShowWindow(hWindowRegister, SW_SHOWDEFAULT);
 //UpdateWindow(hWindowRegister);
 
-//Функция регистрации класса окна для регистра
+//CALLBACK Функция окна для регистра для обработки сообщений
+LRESULT CALLBACK WndProcForWindowOfRegister(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	REGISTERWINDOWSSTRUCT* pRegisterWindowStruct = (REGISTERWINDOWSSTRUCT*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+	switch (message)
+	{
+	case WM_COMMAND:
+	{
+		
+	}
+	break;
+	case WM_CREATE:
+	{
+		InitRegisterWindow(hWnd, lParam);		
+		break;
+	}
+	case WM_CLOSE:
+	{
+		delete pRegisterWindowStruct;
+		DestroyWindow(hWnd);
+		break;
+	}
+	default:
+		return DefWindowProc(hWnd, message, wParam, lParam);
+	}
+	return 0;
+}
+void InitRegisterWindow(HWND hWnd, LPARAM lParam)
+{
+	try
+	{
+		REGISTERWINDOWSSTRUCT* pRegisterWindowStructCreate = AllocWindowStruct<REGISTERWINDOWSSTRUCT>(hWnd);
+		pRegisterWindowStructCreate->hListboxWindow = CreateWindow(L"listbox", L"UsbInfoFromRegister", WS_CHILDWINDOW | WS_VISIBLE | LBS_DISABLENOSCROLL | WS_VSCROLL | WS_HSCROLL,
+			0, 0, 450, 150, hWnd, (HMENU)IDW_LOG_REGISTER, NULL, NULL);
+		pRegisterWindowStructCreate->sizeHScroll = 0;
+		if (pRegisterWindowStructCreate->hListboxWindow == NULL)
+		{
+			MessageBoxA(NULL, "Cannot create window for register", "Create Window Error", MB_OK);
+			SendMessage(hWnd, WM_DESTROY, NULL, NULL);
+		}
+		PrintListOfUSBDevices(pRegisterWindowStructCreate);
+	}
+	catch (const std::bad_alloc& error)
+	{
+		MessageBoxA(NULL, error.what(), "Memory Error", MB_OK);
+		SendMessage(hWnd, WM_DESTROY, NULL, NULL);
+	}
+}
+void PrintListOfUSBDevices(REGISTERWINDOWSSTRUCT* argStruct)
+{
+	std::vector<std::wstring> UsbInfoVector;
+	GetUsbInfoFromRegister(UsbInfoVector);
+	for (const auto& i : UsbInfoVector)
+	{
+		SendMessageW(argStruct->hListboxWindow, LB_ADDSTRING, 0, (LPARAM)(LPWSTR)i.c_str());
+		UINT tmpSize = CalcLBItemWidth(argStruct->hListboxWindow, (LPWSTR)i.c_str());
+		if (argStruct->sizeHScroll <= tmpSize)
+		{
+			argStruct->sizeHScroll = tmpSize;
+			SendMessageW(argStruct->hListboxWindow, LB_SETHORIZONTALEXTENT, (WPARAM)argStruct->sizeHScroll, 0);
+		}
+	}
+}
 ATOM RegWindowForRegisters(HINSTANCE hInstance)
 {
 	WNDCLASSEXW WindowForRegister;;
@@ -21,11 +83,9 @@ ATOM RegWindowForRegisters(HINSTANCE hInstance)
 	WindowForRegister.lpszClassName = REGISTER_WINDOW_CLASS_NAME;
 	WindowForRegister.hIconSm = LoadIcon(nullptr, IDI_APPLICATION);
 	WindowForRegister.hInstance = hInstance;
-	
+
 	return RegisterClassExW(&WindowForRegister);
 }
-
-//Функция создания окна для регистра
 HWND CreateWindowForRegister()
 {
 	HWND hWindowForRegister = CreateWindowW(REGISTER_WINDOW_CLASS_NAME, L"Окно для записей из регистра", WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME,
@@ -37,55 +97,4 @@ HWND CreateWindowForRegister()
 	ShowWindow(hWindowForRegister, SW_SHOWDEFAULT);
 	UpdateWindow(hWindowForRegister);
 	return hWindowForRegister;
-}
-
-//CALLBACK Функция окна для регистра для обработки сообщений
-LRESULT CALLBACK WndProcForWindowOfRegister(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	REGISTERWINDOWSSTRUCT* pRegisterWindowStruct = (REGISTERWINDOWSSTRUCT*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
-	switch (message)
-	{
-	case WM_COMMAND:
-	{
-		
-	}
-	break;
-	case WM_CREATE:
-	{
-		REGISTERWINDOWSSTRUCT* pRegisterWindowStructCreate = AllocWindowStruct<REGISTERWINDOWSSTRUCT>(hWnd);
-		if (pRegisterWindowStructCreate == nullptr)
-		{
-			MessageBox(NULL, L"Cannot create Window buttons ptr", L"Alloc Fail", MB_OK);
-			SendMessage(hWnd, WM_DESTROY, NULL, NULL);
-			break;
-		}
-		pRegisterWindowStructCreate->hListboxWindow = CreateWindow(L"listbox", L"UsbInfoFromRegister", WS_CHILDWINDOW | WS_VISIBLE | LBS_DISABLENOSCROLL | WS_VSCROLL | WS_HSCROLL,
-			0, 0,450,150, hWnd, (HMENU)IDW_LOG_REGISTER, NULL, NULL);
-		pRegisterWindowStructCreate->sizeHScroll = 0;
-
-		std::vector<std::wstring> UsbInfoVector;
-		GetUsbInfoFromRegister(UsbInfoVector);
-		for (const auto& i : UsbInfoVector)
-		{
-			SendMessageW(pRegisterWindowStructCreate->hListboxWindow, LB_ADDSTRING, 0, (LPARAM)(LPWSTR)i.c_str());
-			UINT tmpSize = CalcLBItemWidth(pRegisterWindowStructCreate->hListboxWindow, (LPWSTR)i.c_str());
-			if (pRegisterWindowStructCreate->sizeHScroll <= tmpSize)
-			{
-				pRegisterWindowStructCreate->sizeHScroll = tmpSize;
-				SendMessageW(pRegisterWindowStructCreate->hListboxWindow, LB_SETHORIZONTALEXTENT, (WPARAM)pRegisterWindowStructCreate->sizeHScroll, 0);
-			}
-		}
-		
-		break;
-	}
-	case WM_CLOSE:
-	{
-		delete pRegisterWindowStruct;
-		DestroyWindow(hWnd);
-		break;
-	}
-	default:
-		return DefWindowProc(hWnd, message, wParam, lParam);
-	}
-	return 0;
 }

@@ -33,7 +33,7 @@ CDataBaseWrapper::CDataBaseWrapper():  m_pDataBaseHandle(nullptr)
 
 CDataBaseWrapper::~CDataBaseWrapper()
 {
-	sqlite3_close(m_pDataBaseHandle);
+	sqlite3_close(m_pDataBaseHandle);	
 }
 //__________________________________________________________
 
@@ -47,6 +47,7 @@ void CDataBaseWrapper::AddDataToDataBase(const wchar_t* deviceName, const wchar_
 	{	
 	case SQLITE_DONE:		
 		InsertUSBInfo(deviceName, serialNumber);
+		__fallthrough;
 		//CreateTableForDate(TakeId(serialNumber));
 	case SQLITE_ROW:
 		AddConnectionDate(TakeId(serialNumber));

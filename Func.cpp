@@ -1,5 +1,6 @@
 #include "Func.h"
 
+//Функция получения длины строки в пикселях(в том числе и невидимой области)
 UINT CalcLBItemWidth(HWND hLB, LPWSTR Text)
 {
 	RECT r;
@@ -15,6 +16,7 @@ UINT CalcLBItemWidth(HWND hLB, LPWSTR Text)
 	return (r.right - r.left) + (2 * GetSystemMetrics(SM_CXEDGE)) + 1;
 }
 
+//Результирующая функция получения вектора с названиями и серийными номерами USB устройств
 void GetUsbInfoFromRegister(std::vector<std::wstring> &VectorOfDeviceInfo)
 {
 	HKEY hDeviceNameKey;
@@ -24,6 +26,7 @@ void GetUsbInfoFromRegister(std::vector<std::wstring> &VectorOfDeviceInfo)
 	}
 }
 
+//Функция получения имени USB устройств из названий каталогов регистра
 void QueryKey(HKEY hKey, std::vector<std::wstring>* argVector)
 {
 	TCHAR    BufferDeviceName[MAX_KEY_LENGTH];   // buffer for subkey name	
@@ -41,6 +44,7 @@ void QueryKey(HKEY hKey, std::vector<std::wstring>* argVector)
 	RegCloseKey(hKey);
 }
 
+//Функция получения серийных номеров USB устройств из названий каталогов регистра
 void GetSerialNumbers(TCHAR* argBuffer, std::vector<std::wstring>* argVector)
 {
 	TCHAR    BufferSerialNumber[MAX_KEY_LENGTH];   // buffer for subkey name
@@ -66,7 +70,7 @@ void GetSerialNumbers(TCHAR* argBuffer, std::vector<std::wstring>* argVector)
 	}
 	RegCloseKey(hSerialNumberKey);
 }
-
+//Функция получения списка подкаталогов по указаному ключу в реестре
 DWORD GetCSubKeys(HKEY hKey)
 {
 	TCHAR    achClass[MAX_PATH] = TEXT("");  // buffer for class name 

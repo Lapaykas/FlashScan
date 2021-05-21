@@ -22,24 +22,16 @@ DWORD GetCSubKeys(HKEY hKey);
 
 template <typename T>
 T* AllocWindowStruct(HWND hWnd)
-{
-	T* retPointer;
-	try
-	{
-		retPointer = new T;
+{	
+	T* retPointer = new T;	
 
-		SetLastError(0);
-		if (SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)retPointer) || GetLastError() == NULL)
-		{
-			return retPointer;
-		}
-		delete retPointer;
-		return nullptr;
-	}
-	catch (const std::bad_alloc&)
+	SetLastError(0);
+	if (SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)retPointer) || GetLastError() != NULL)
 	{
-		return nullptr;
-	}
+		delete retPointer;
+		throw "Cannot create Window long ptr";
+	}	
+	return retPointer;
 }
 
 

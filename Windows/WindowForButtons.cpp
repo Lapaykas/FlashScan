@@ -32,7 +32,7 @@ HWND CreateWindowForButtons(HINSTANCE hInstance, HWND hWndParent)
 		hWndParent, nullptr, hInstance, nullptr);
 	if (hWindowForButtons == NULL)
 	{
-		return NULL;
+        throw std::exception("Cannot create window for button");
 	}
 	ShowWindow(hWindowForButtons, SW_SHOWDEFAULT);
 	UpdateWindow(hWindowForButtons);

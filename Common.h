@@ -20,25 +20,25 @@ while(0);
 //Структура для главного окна
 typedef struct _MAINWINDOWSTRUCT
 {
-    HINSTANCE hInst = nullptr;
+	HINSTANCE hInst = nullptr;
 	std::unique_ptr<CDataBaseWrapper> BASE;
 	//	CDataBaseWrapper* BASE;
-    HDEVNOTIFY REG_DEVICE = nullptr;
+	HDEVNOTIFY REG_DEVICE = nullptr;
 	HWND hLogWindow = NULL;
-}MAINWINDOWSTRUCT, *PMAINWINDOWRUCT;
+}MAINWINDOWSTRUCT, * PMAINWINDOWRUCT;
 
 //Структура для окна с кнопками
 typedef struct _BUTTONWINDOWSSTRUCT
 {
 	HWND hButtonWindowRegister = NULL;
 	HWND hRegisterWindow = NULL;
-}BUTTONWINDOWSSTRUCT, *PBUTTONWINDOWSTRUCT;
+}BUTTONWINDOWSSTRUCT, * PBUTTONWINDOWSTRUCT;
 
 //Структура для окна с записями из регистра
 typedef struct _REGISTERWINDOWSSTRUCT
 {
 	HWND hListboxWindow = NULL;
 	UINT sizeHScroll = NULL;
-}REGISTERWINDOWSSTRUCT, *PREGISTERWINDOWSTRUCT;
+}REGISTERWINDOWSSTRUCT, * PREGISTERWINDOWSTRUCT;
 
 const GUID guidForUSBDevices = { 0x53f56307, 0xb6bf, 0x11d0, { 0x94, 0xf2, 0x00, 0xa0, 0xc9, 0x1e, 0xfb, 0x8b } };

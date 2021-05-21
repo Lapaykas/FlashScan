@@ -42,7 +42,7 @@ HWND CreateWindowForLogs(HINSTANCE hInstance, HWND hWndParent)
 		hWndParent, (HMENU)IDW_LOG_WINDOW, hInstance, nullptr);
 	if (hWindowForLogs == NULL)
 	{
-		return NULL;
+        throw std::exception("Cannot create window for logs");
 	}
 	ShowWindow(hWindowForLogs, SW_SHOWDEFAULT);
 	UpdateWindow(hWindowForLogs);
