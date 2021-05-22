@@ -64,16 +64,7 @@ LRESULT CALLBACK WndProcForWindowOfButtons(HWND hWnd, UINT message, WPARAM wPara
     break;
     case WM_CREATE:
     {
-		BUTTONWINDOWSSTRUCT* pButtonWindowStructCreate = AllocWindowStruct<BUTTONWINDOWSSTRUCT>(hWnd);
-		if (pButtonWindowStructCreate == nullptr)
-		{
-			MessageBox(NULL, L"Cannot create Window buttons ptr", L"Alloc Fail", MB_OK);
-			SendMessage(hWnd, WM_DESTROY, NULL, NULL);
-			break;
-		}
-		pButtonWindowStructCreate->hRegisterWindow = NULL;
-		pButtonWindowStructCreate->hButtonWindowRegister = CreateWindowW(L"button", L"READ USB FROM REGISTER", WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, 0, 0, 400,20, hWnd, (HMENU)IDB_GET_REGISTER_USB, NULL, NULL);
- 
+        InitButtonWindow(hWnd);
         break;
     }
     case WM_DEVICECHANGE:
@@ -88,4 +79,25 @@ LRESULT CALLBACK WndProcForWindowOfButtons(HWND hWnd, UINT message, WPARAM wPara
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
     return 0;
+}
+
+
+void InitButtonWindow(HWND hWnd)
+{
+    try
+    {
+        BUTTONWINDOWSSTRUCT* pButtonWindowStructCreate = AllocWindowStruct<BUTTONWINDOWSSTRUCT>(hWnd);
+
+        pButtonWindowStructCreate->hButtonWindowRegister = CreateWindowW(L"button", L"READ USB FROM REGISTER", WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON, 0, 0, 400, 20, hWnd, (HMENU)IDB_GET_REGISTER_USB, NULL, NULL);
+    }
+    catch (const std::bad_alloc& error)
+    {
+        MessageBoxA(NULL, error.what(), "Cannot alloc", MB_OK);
+        SendMessage(hWnd, WM_DESTROY, NULL, NULL);
+    }
+    catch (const std::exception& error)
+    {
+        MessageBoxA(NULL, error.what(), "Error", MB_OK);
+        SendMessage(hWnd, WM_DESTROY, NULL, NULL);
+    }
 }

@@ -29,7 +29,7 @@ T* AllocWindowStruct(HWND hWnd)
 	if (SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR)retPointer) || GetLastError() != NULL)
 	{
 		delete retPointer;
-		throw "Cannot create Window long ptr";
+		throw std::exception("Cannot create window long ptr");
 	}	
 	return retPointer;
 }
