@@ -1,3 +1,6 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 #include "Func.h"
 
 //Функция получения длины строки в пикселях(в том числе и невидимой области)
@@ -20,7 +23,7 @@ UINT CalcLBItemWidth(HWND hLB, LPWSTR Text)
 void GetUsbInfoFromRegister(std::vector<std::wstring> &VectorOfDeviceInfo)
 {
 	HKEY hDeviceNameKey;
-	if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, TEXT("SYSTEM\\CurrentControlSet\\Enum\\USBSTOR"), 0, KEY_READ, &hDeviceNameKey) == ERROR_SUCCESS)
+	if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Enum\\USBSTOR", 0, KEY_READ, &hDeviceNameKey) == ERROR_SUCCESS)
 	{
 		QueryKey(hDeviceNameKey, &VectorOfDeviceInfo);
 	}

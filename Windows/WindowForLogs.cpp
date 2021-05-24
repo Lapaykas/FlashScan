@@ -1,3 +1,6 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 #include "WindowForButtons.h"
 #include "WindowForLogs.h"
 
@@ -79,10 +82,6 @@ LRESULT CALLBACK WndProcForWindowOfLogs(HWND hWnd, UINT message, WPARAM wParam, 
 		sizeHScroll = 0;
         hWndListBox = CreateWindowW(L"listbox", NULL, WS_CHILDWINDOW | WS_VISIBLE | LBS_DISABLENOSCROLL | WS_VSCROLL | WS_HSCROLL
             , 0, 0, 380, 100, hWnd, (HMENU)IDW_LOG_WINDOW, nullptr, nullptr);
-        break;
-    }
-    case WM_DEVICECHANGE:
-    {
         break;
     }
     case WM_DESTROY:

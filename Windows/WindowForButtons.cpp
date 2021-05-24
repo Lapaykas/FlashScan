@@ -1,3 +1,6 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 #include "WindowForButtons.h"
 
 //GLOBALSTRUCT* params = (GLOBALSTRUCT*)GetWindowLongPtr(hParentHandle, GWLP_USERDATA);
@@ -65,10 +68,6 @@ LRESULT CALLBACK WndProcForWindowOfButtons(HWND hWnd, UINT message, WPARAM wPara
     case WM_CREATE:
     {
         InitButtonWindow(hWnd);
-        break;
-    }
-    case WM_DEVICECHANGE:
-    {
         break;
     }
     case WM_DESTROY:

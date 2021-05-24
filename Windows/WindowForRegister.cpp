@@ -1,3 +1,6 @@
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// PVS-Studio Static Code Analyzer for C, C++ and C#: http://www.viva64.com
+
 #include "WindowForRegister.h"
 
 //GLOBALSTRUCT* params = (GLOBALSTRUCT*)GetWindowLongPtr(hParentHandle, GWLP_USERDATA);
@@ -10,11 +13,6 @@ LRESULT CALLBACK WndProcForWindowOfRegister(HWND hWnd, UINT message, WPARAM wPar
 	REGISTERWINDOWSSTRUCT* pRegisterWindowStruct = (REGISTERWINDOWSSTRUCT*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
 	switch (message)
 	{
-	case WM_COMMAND:
-	{
-		
-	}
-	break;
 	case WM_CREATE:
 	{
 		InitRegisterWindow(hWnd, lParam);		
